@@ -57,7 +57,25 @@ if file:
             _, pred = torch.max(out, 1)
         
     # 3. Display Result
-    classes = ['Overripe (Eat now!)', 'Ripe (Perfect)', 'Rotten (Throw away)', 'Unripe (Wait a bit)']
+# Map class index to name and estimated days
+# Index order: Overripe, Ripe, Rotten, Unripe
+ripeness_info = {
+    0: {"label": "Overripe", "days": "1 day", "color": "orange", "advice": "Perfect for banana bread!"},
+    1: {"label": "Ripe", "days": "2-3 days", "color": "green", "advice": "Great for a snack today."},
+    2: {"label": "Rotten", "days": "0 days", "color": "red", "advice": "Time to compost this one."},
+    3: {"label": "Unripe", "days": "5-7 days", "color": "blue", "advice": "Give it a few days to sweeten up."}
+}
 
-    st.success(f"**Verdict:** {classes[pred.item()]}")
+result = ripeness_info[pred.item()]
+
+# Display the Verdict
+st.subheader(f"Status: {result['label']}")
+
+# Display the "Days Left" Metric
+st.metric(label="Estimated Days Until Rotten", value=result['days'])
+
+# Display custom advice
+st.info(f"💡 **AI Advice:** {result['advice']}")
+
+    
 
