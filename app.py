@@ -55,26 +55,44 @@ if file:
     img_t = test_transform(img).unsqueeze(0)
 
     # 3. Run Inference
-    with st.spinner('AI is thinking...'):
+    import torch.nn.functional as F
+
+    with st.spinner('Analyzing image...'):
         with torch.no_grad():
             out = model(img_t)
-            _, pred = torch.max(out, 1)
+            
+            # Convert raw scores to probabilities (0% to 100%)
+            probabilities = F.softmax(out, dim=1)
+            confidence, pred = torch.max(probabilities, 1)
+            
+            confidence_score = confidence.item()
             index = pred.item()
 
-    # 4. Knowledge Base Mapping
-    ripeness_info = {
-        0: {"label": "Overripe", "days": "1 day", "advice": "Eat now or freeze for smoothies!"},
-        1: {"label": "Ripe", "days": "2-3 days", "advice": "Perfect for a snack!"},
-        2: {"label": "Rotten", "days": "0 days", "advice": "Too late! Compost it."},
-        3: {"label": "Unripe", "days": "5-7 days", "advice": "Wait for the yellow color."}
-    }
+    if confidence_score < 0.70:
+        st.error("🚨 **Low Confidence!**")
+        st.warning(f"The AI is only {confidence_score:.1%} sure about this. This might not be a banana, or the lighting is too poor. Please try again with a clearer photo!")
+        
+        st.caption(f"Psst... it thought it looked a bit like: {['Overripe', 'Ripe', 'Rotten', 'Unripe'][index]}")
 
-    result = ripeness_info[index]
+    else:
+        ripeness_info = {
+            0: {"label": "Overripe", "days": "1 day", "advice": "Eat now or freeze for smoothies!"},
+            1: {"label": "Ripe", "days": "2-3 days", "advice": "Perfect for a snack!"},
+            2: {"label": "Rotten", "days": "0 days", "advice": "Too late! Compost it."},
+            3: {"label": "Unripe", "days": "5-7 days", "advice": "Wait for the yellow color."}
+        }
 
-    # 5. Display Results
-    st.success(f"**Verdict:** {result['label']}")
-    st.metric(label="Estimated Days Until Rotten", value=result['days'])
-    st.info(f"💡 **AI Advice:** {result['advice']}")
+        result = ripeness_info[index]
+
+        # 6. Display Results
+        st.success(f"**Verdict: {result['label']}**")
+        
+        # Create two columns for a clean look
+        col1, col2 = st.columns(2)
+        col1.metric(label="Days Left", value=result['days'])
+        col2.metric(label="AI Confidence", value=f"{confidence_score:.1%}")
+        
+        st.info(f"💡 **AI Advice:** {result['advice']}")
 
     # 6. Sharing Section
     st.divider()
@@ -93,4 +111,5 @@ if file:
 
 else:
     st.info("Waiting for an image to be uploaded...")
+
 
