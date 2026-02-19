@@ -8,13 +8,15 @@ from PIL import Image
 st.set_page_config(page_title="Banana AI", page_icon="🍌")
 
 # --- MODEL LOADING ---
-@st.cache_resource # This keeps the app fast by loading the model only once
+# This keeps the app fast by loading the model only once
+@st.cache_resource
 def load_model():
     model = models.mobilenet_v2()
     model.classifier[1] = nn.Linear(1280, 4)
+    # BE CAREFUL: Ensure the filename matches your GitHub file EXACTLY (with .pth if it has one)
     model.load_state_dict(torch.load('bestt1_banana_model.pth', map_location='cpu'))
     model.eval()
-    return model
+    return model 
 
 model = load_model()
 
@@ -59,23 +61,41 @@ if file:
     # 3. Display Result
 # Map class index to name and estimated days
 # Index order: Overripe, Ripe, Rotten, Unripe
+# 1. Define the knowledge base
 ripeness_info = {
-    0: {"label": "Overripe", "days": "1 day", "color": "orange", "advice": "Perfect for banana bread!"},
-    1: {"label": "Ripe", "days": "2-3 days", "color": "green", "advice": "Great for a snack today."},
-    2: {"label": "Rotten", "days": "0 days", "color": "red", "advice": "Time to compost this one."},
-    3: {"label": "Unripe", "days": "5-7 days", "color": "blue", "advice": "Give it a few days to sweeten up."}
+    0: {"label": "Overripe", "days": "1 day", "advice": "Eat now or freeze for smoothies!"},
+    1: {"label": "Ripe", "days": "2-3 days", "advice": "Perfect for a snack!"},
+    2: {"label": "Rotten", "days": "0 days", "advice": "Too late! Compost it."},
+    3: {"label": "Unripe", "days": "5-7 days", "advice": "Wait for the yellow color."}
 }
 
-result = ripeness_info[pred.item()]
+# 2. Get the index from the AI
+with torch.no_grad():
+    out = model(img_t)
+    _, pred = torch.max(out, 1)
+    index = pred.item()
 
-# Display the Verdict
-st.subheader(f"Status: {result['label']}")
+# 3. Pull the specific data
+result = ripeness_info[index]
 
-# Display the "Days Left" Metric
-st.metric(label="Estimated Days Until Rotten", value=result['days'])
+# 4. Show it on the screen
+st.success(f"**Verdict:** {result['label']}")
+st.metric(label="Days Until Rotten", value=result['days'])
+st.info(f"💡 {result['advice']}")
 
-# Display custom advice
-st.info(f"💡 **AI Advice:** {result['advice']}")
+st.divider() # Adds a nice visual line
 
-    
+st.subheader("📢 Share with Friends")
 
+# This creates a URL that pre-fills a message for WhatsApp
+share_text = f"My banana is {result['label']}! This AI says it has {result['days']} left. Check yours here:"
+app_url = "https://your-app-link.streamlit.app" # Replace with your real link!
+
+# WhatsApp Share Link
+whatsapp_url = f"https://wa.me/?text={share_text} {app_url}"
+
+st.column_config.LinkColumn("Share on WhatsApp")
+st.link_button("Share on WhatsApp 🟢", whatsapp_url)
+
+# Copy to Clipboard (Built-in Streamlit feature)
+st.button("Copy App Link 🔗", on_click=lambda: st.write(f"Link copied: {app_url}"))
