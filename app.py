@@ -40,24 +40,25 @@ with st.sidebar:
 file = st.file_uploader("Upload or take a photo of a banana", type=["jpg", "jpeg", "png"])
 
 if file:
+    # 1. Open the raw image
     img = Image.open(file)
-    st.image(img, caption="Your Banana", use_container_width=True)
+    st.image(img, caption="Uploaded Banana", use_container_width=True)
     
-    # Simple "Thinking" animation
-    with st.spinner('Analyzing ripeness...'):
-        # 1. Transform
-        test_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-        img_t = test_transform(img).unsqueeze(0)
-        
-        # 2. Predict
-        with torch.no_grad():
-            out = model(img_t)
-            _, pred = torch.max(out, 1)
-        
+    # 2. DEFINE img_t HERE (The Transformation)
+    test_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    
+    # This line turns the PIL image into the 'img_t' tensor
+    # .unsqueeze(0) adds the batch dimension the model expects
+    img_t = test_transform(img).unsqueeze(0)
+
+    # 3. Now you can use it!
+    with st.spinner('AI is thinking...'):
+        out = model(img_t) # <--- Now this will work!
+        _, pred = torch.max(out, 1)
     # 3. Display Result
 # Map class index to name and estimated days
 # Index order: Overripe, Ripe, Rotten, Unripe
@@ -99,3 +100,4 @@ st.link_button("Share on WhatsApp 🟢", whatsapp_url)
 
 # Copy to Clipboard (Built-in Streamlit feature)
 st.button("Copy App Link 🔗", on_click=lambda: st.write(f"Link copied: {app_url}"))
+
