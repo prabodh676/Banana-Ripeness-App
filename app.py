@@ -12,7 +12,7 @@ st.set_page_config(page_title="Banana AI", page_icon="🍌")
 def load_model():
     model = models.mobilenet_v2()
     model.classifier[1] = nn.Linear(1280, 4)
-    model.load_state_dict(torch.load('banana_model_v2.pth', map_location='cpu'))
+    model.load_state_dict(torch.load('bestt1_banana_model', map_location='cpu'))
     model.eval()
     return model
 
@@ -58,4 +58,5 @@ if file:
         
     # 3. Display Result
     classes = ['Overripe (Eat now!)', 'Ripe (Perfect)', 'Rotten (Throw away)', 'Unripe (Wait a bit)']
+
     st.success(f"**Verdict:** {classes[pred.item()]}")
