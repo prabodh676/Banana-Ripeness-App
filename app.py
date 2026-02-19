@@ -40,7 +40,6 @@ with st.sidebar:
 # File Uploader
 file = st.file_uploader("Upload or take a photo of a banana", type=["jpg", "jpeg", "png"])
 
-# --- PREDICTION LOGIC (Must stay inside this if-block) ---
 if file:
     # 1. Open and show the raw image
     img = Image.open(file)
@@ -82,7 +81,7 @@ if file:
     st.subheader("📢 Share with Friends")
 
     share_text = f"My banana is {result['label']}! This AI says it has {result['days']} left. Check yours here:"
-    app_url = "https://your-app-link.streamlit.app" # <--- UPDATE THIS LINK!
+    app_url = "https://banana-ripeness-app.streamlit.app" 
 
     whatsapp_url = f"https://wa.me/?text={share_text} {app_url}"
     
@@ -94,3 +93,4 @@ if file:
 
 else:
     st.info("Waiting for an image to be uploaded...")
+
